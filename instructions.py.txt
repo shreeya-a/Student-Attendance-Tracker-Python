@@ -1,0 +1,19 @@
+Project 3: Student Attendance System
+Group 3
+✅ Description:
+A basic attendance management system for teachers to track student attendance with a visual attendance chart for better tracking.
+✅ Features:
+Login System for Teachers (Optional)
+CRUD Operations for Students
+Add, Edit, Delete student records
+Attendance Marking
+Mark Present, Absent, or Late for each student
+Date-wise attendance records
+API to Fetch Attendance Data
+Attendance Analytics Dashboard
+Attendance Chart (Visual representation of attendance % per student)
+Overall Class Attendance Statistics (Total present/absent students per day)
+Student Performance Tracking (Attendance percentage for each student)
+📌 Bonus (Optional for extra challenge):
+Download Attendance Reports as CSV/PDF
+Send Automated Email Alerts for low attendance students
