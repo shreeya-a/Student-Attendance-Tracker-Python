@@ -82,7 +82,7 @@ def add_student():
         flash("Student added successfully!", "success")
         return redirect(url_for("dashboard"))
     
-    return render_template("CRUD/add_student.html")
+    return render_template("student/add_student.html")
 
 
 

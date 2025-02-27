@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title%}Student List{% endblock %}
+
+{% block styles%} {% endblock %}
+
+{% block content%}
+
+<table class="table table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>SN</th>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Address</th>
+            <th>Phone</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for student in students %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ student.id }}</td>
+            <td>{{ student.name }}</td>
+            <td>{{ student.email }}</td>
+            <td>{{ student.address }}</td>
+            <td>{{ student.phone }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
