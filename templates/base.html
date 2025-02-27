@@ -4,46 +4,62 @@
     <meta charset="UTF-8">
     <title>{% block title %}Admin Dashboard{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <style>
+        :root {
+            --primary-color: #6f42c1;
+            --primary-hover: #5a32a3;
+            --sidebar-bg: #6f42c1;
+            --sidebar-text: #ffffff;
+        }
+
         body {
             display: flex;
         }
+
         /* Sidebar Styling */
         .sidebar {
             width: 250px;
             height: 100vh;
-            background: #343a40;
-            color: white;
-            padding: 15px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
             position: fixed;
+            top: 0;
+            left: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* Logout stays at the bottom */
         }
-        .sidebar h4, .sidebar p {
+
+        .sidebar .brand {
+            font-size: 24px;
+            font-weight: bold;
             text-align: center;
+            margin-bottom: 20px;
         }
+
         .sidebar a {
-            color: white;
+            display: flex;
+            align-items: center;
+            color: var(--sidebar-text);
             text-decoration: none;
-            display: block;
-            padding: 12px 15px;
-            border-radius: 5px;
-            margin-bottom: 12px; /* Added spacing */
-            transition: background 0.3s;
+            font-size: 18px;
+            padding: 12px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
         }
+
+        .sidebar a i {
+            margin-right: 10px;
+        }
+
         .sidebar a:hover {
-            background: #495057;
+            background-color: var(--primary-hover);
         }
-        .sidebar .active {
-            background: #007bff;
-        }
-        .manage-students {
-            margin-left: 15px; /* Indent for sub-options */
-            font-size: 0.95rem;
-        }
-        .logout {
+
+        .sidebar .logout {
             margin-top: auto;
         }
 
@@ -61,6 +77,7 @@
             padding: 10px 20px;
             border-radius: 5px;
         }
+
         .breadcrumb {
             margin-bottom: 0;
         }
@@ -71,16 +88,13 @@
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <div>
-            <h4>Admin Panel</h4>
-            <p>Welcome, {{ current_user.username }}</p>
-            <a href="{{ url_for('dashboard') }}" class="{% if request.path == url_for('dashboard') %}active{% endif %}">Dashboard</a>
+        <div class="brand">Dashboard</div>
 
-            <h6 class="text-white mt-3">Manage Students</h6>
-            <a href="{{ url_for('student_list') }}" class="manage-students {% if request.path == url_for('student_list') %}active{% endif %}">Student List</a>
-            <a href="{{ url_for('add_student') }}" class="manage-students {% if request.path == url_for('add_student') %}active{% endif %}">Add Student</a>
-        </div>
-        <a href="{{ url_for('logout') }}" class="text-danger logout">Logout</a>
+        <a href="{{ url_for('dashboard') }}"><i class="fa fa-home"></i> Home</a>
+        <a href="{{ url_for('view_student') }}"><i class="fa fa-users"></i> Students</a>
+
+
+        <a href="{{ url_for('logout') }}" class="logout"><i class="fa fa-sign-out-alt"></i> Logout</a>
     </div>
 
     <!-- Main Content -->
@@ -92,7 +106,7 @@
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                        {% if request.endpoint == 'student_list' %}
+                        {% if request.endpoint == 'view_student' %}
                             <li class="breadcrumb-item active" aria-current="page">Student List</li>
                         {% elif request.endpoint == 'add_student' %}
                             <li class="breadcrumb-item active" aria-current="page">Add Student</li>
