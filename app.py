@@ -106,7 +106,7 @@ def view_student():
             db.session.commit()
             
             flash("Student added successfully!", "success")
-            # return redirect(url_for("view_student")) 
+            return redirect(url_for("view_student")) 
         except Exception as e:
             flash("Error: Email or Phone number already exists!", "danger")
             # return redirect("view_student") 
