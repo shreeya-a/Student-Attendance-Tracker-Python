@@ -2,18 +2,124 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% block head %}
+    <title>{% block title %}Admin Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            display: flex;
+        }
+        /* Sidebar Styling */
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background: #343a40;
+            color: white;
+            padding: 15px;
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Logout stays at the bottom */
+        }
+        .sidebar h4, .sidebar p {
+            text-align: center;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 12px; /* Added spacing */
+            transition: background 0.3s;
+        }
+        .sidebar a:hover {
+            background: #495057;
+        }
+        .sidebar .active {
+            background: #007bff;
+        }
+        .manage-students {
+            margin-left: 15px; /* Indent for sub-options */
+            font-size: 0.95rem;
+        }
+        .logout {
+            margin-top: auto;
+        }
 
+        /* Content Styling */
+        .content {
+            margin-left: 260px; /* Matches sidebar width */
+            padding: 20px;
+            width: 100%;
+        }
 
-    {% endblock %}
-    
+        /* Navbar Styling */
+        .navbar {
+            background: white;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        .breadcrumb {
+            margin-bottom: 0;
+        }
+    </style>
+    {% block styles %}{% endblock %}
 </head>
 <body>
-    {% block body %}
 
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div>
+            <h4>Admin Panel</h4>
+            <p>Welcome, {{ current_user.username }}</p>
+            <a href="{{ url_for('dashboard') }}" class="{% if request.path == url_for('dashboard') %}active{% endif %}">Dashboard</a>
 
-    {% endblock %}
+            <h6 class="text-white mt-3">Manage Students</h6>
+            <a href="{{ url_for('student_list') }}" class="manage-students {% if request.path == url_for('student_list') %}active{% endif %}">Student List</a>
+            <a href="{{ url_for('add_student') }}" class="manage-students {% if request.path == url_for('add_student') %}active{% endif %}">Add Student</a>
+        </div>
+        <a href="{{ url_for('logout') }}" class="text-danger logout">Logout</a>
+    </div>
 
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid d-flex justify-content-between align-items-center">
+                <a class="navbar-brand fw-semibold" href="#">{% block nav_title%} {% endblock%}</a>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        {% if request.endpoint == 'student_list' %}
+                            <li class="breadcrumb-item active" aria-current="page">Student List</li>
+                        {% elif request.endpoint == 'add_student' %}
+                            <li class="breadcrumb-item active" aria-current="page">Add Student</li>
+                        {% endif %}
+                    </ol>
+                </nav>
+            </div>
+        </nav>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Dynamic Content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/flash_messages.js') }}"></script>
 </body>
 </html>

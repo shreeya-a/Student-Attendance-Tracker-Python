@@ -28,19 +28,20 @@ class Student(db.Model):
     # __tablename__ = 'student_list'
     
     id = db.Column(db.Integer, primary_key = True)
-    # student_id = db.Column(db.String(20), unique=True, nullable=False)  # Custom ID
-    name = db.Column(db.String(150), nullable=False)
+    student_id = db.Column(db.String(20), unique=True, nullable=False)  # Custom ID
+    first_name = db.Column(db.String(150), nullable=False)
+    last_name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     address = db.Column(db.Text, nullable=False)
     phone = db.Column(db.String(15), unique=True, nullable=False)
  
 # for automatic student_id generation       
-# @event.listens_for(Student, "before_insert")
-# def generate_student_id(mapper, connection, target):
-#     """Auto-generate student_id before inserting a record"""
-#     last_student = db.session.query(Student).order_by(Student.id.desc()).first()
-#     next_id = last_student.id + 1 if last_student else 1  # Get the next available ID
-#     target.student_id = f"STD{next_id:04d}"  # STD0001
+@event.listens_for(Student, "before_insert")
+def generate_student_id(mapper, connection, target):
+    """Auto-generate student_id before inserting a record"""
+    last_student = db.session.query(Student).order_by(Student.id.desc()).first()
+    next_id = last_student.id + 1 if last_student else 1  # Get the next available ID
+    target.student_id = f"STD{next_id:04d}"  # STD0001
 
 class Attendance(db.Model):
     
