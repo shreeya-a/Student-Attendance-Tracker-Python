@@ -27,12 +27,16 @@ def load_admin(admin_id):
     return User.query.get(int(admin_id))
 
 @app.route("/")
-@login_required
 def home():
-    return render_template("index.html", user=current_user.username)
+    if current_user.is_authenticated:
+        return render_template(url_for("dashboard"))
+    return redirect(url_for("login"))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
+    
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
