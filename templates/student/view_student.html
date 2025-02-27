@@ -111,14 +111,14 @@
                     <td>{{ student.address }}</td>
                     <td>{{ student.phone }}</td>
                     <td>
-                        <button class="icon-btn" onclick="editStudent({{ student.student_id }})">
+                        <a  href = "/update/{{student.id}}" class="icon-btn" >
                             <i class="fas fa-edit"></i>
-                        </button>
+                        </a>
                     </td>
                     <td>
-                        <button class="icon-btn text-danger" onclick="deleteStudent({{ student.student_id }})">
+                        <a href = "/delete/{{student.id}}" class="icon-btn text-danger" onclick = "return ConfirmDelete()">
                             <i class="fas fa-trash-alt"></i>
-                        </button>
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -128,14 +128,8 @@
 </div>
 
 <script>
-    function editStudent(id) {
-        alert("Edit function for student ID " + id + " not implemented yet.");
-    }
-
-    function deleteStudent(id) {
-        if (confirm("Are you sure you want to delete this student?")) {
-            alert("Delete function for student ID " + id + " not implemented yet.");
-        }
+    function ConfirmDelete(){
+        return confirm("Are you sure you want to delete this todo task?")
     }
 </script>
 

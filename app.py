@@ -68,9 +68,30 @@ def dashboard():
     return render_template("dashboard.html", students=students)
 
 
-@app.route('/add_student', methods=["GET", "POST"])
+# @app.route('/add_student', methods=["GET", "POST"])
+# @login_required
+# def add_student():
+#     if request.method == "POST":
+#         first_name = request.form["first_name"]
+#         last_name = request.form["last_name"]
+#         email = request.form["email"]
+#         address = request.form["address"]
+#         phone = request.form["phone"]
+
+#         new_student = Student(first_name= first_name, last_name = last_name, email=email, address=address, phone=phone)
+#         db.session.add(new_student)
+#         db.session.commit()
+        
+#         flash("Student added successfully!", "success")
+#         return redirect(url_for("student/view_student.html"))
+    
+#     return render_template("student/add_student.html")
+
+# display student list in table
+
+@app.route('/view-student', methods=["GET", "POST"])
 @login_required
-def add_student():
+def view_student():
     if request.method == "POST":
         first_name = request.form["first_name"]
         last_name = request.form["last_name"]
@@ -78,26 +99,61 @@ def add_student():
         address = request.form["address"]
         phone = request.form["phone"]
 
-        new_student = Student(first_name= first_name, last_name = last_name, email=email, address=address, phone=phone)
-        db.session.add(new_student)
-        db.session.commit()
+        new_student = Student(first_name=first_name, last_name=last_name, email=email, address=address, phone=phone)
+        try:
+            
+            db.session.add(new_student)
+            db.session.commit()
+            
+            flash("Student added successfully!", "success")
+            # return redirect(url_for("view_student")) 
+        except Exception as e:
+            flash("Error: Email or Phone number already exists!", "danger")
+            # return redirect("view_student") 
+            return redirect(url_for("student/view_student.html"))
         
-        flash("Student added successfully!", "success")
-        return redirect(url_for("student/view_student.html"))
     
-    return render_template("student/add_student.html")
-
-# display student list in table
-
-@app.route('/view-student')
-@login_required
-def view_student():
-    # students = Student.query.all()
-    students = Student.query.order_by(Student.first_name.asc()).all()
-    return render_template("student/view_student.html", students = students)
+    students = Student.query.order_by(Student.first_name.asc()).all()  
+    return render_template("student/view_student.html", students=students)
 
 
+# update  student details
 
+@app.route('/update/<int:id>', methods = ["GET", "POST"])
+def update(id):
+    student = Student.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        student.first_name = request.form['first_name']
+        student.last_name = request.form['last_name']
+        student.email = request.form['email']
+        student.phone = request.form['phone']
+        student.address = request.form['address']
+        
+        try:
+            db.session.commit()
+            flash("Student details updated successfully!", "success")
+            return redirect(url_for('view_student'))
+
+        except Exception as e:
+            flash(f"Error: There was an issue while updating student details! {e}", "danger")
+    else:
+        return render_template('student/edit_student.html', student = student)
+
+# delete student details
+@app.route('/delete/<int:id>')
+def delete(id):
+    student = Student.query.get_or_404(id)
+    
+    try:
+        db.session.delete(student)
+        db.session.commit()
+        flash("Student deleted successfully!", "success")
+        return redirect(url_for("view_student")) 
+    except:
+        flash(f"Error: There was an issue while deleting the student details!", "danger")
+        return redirect(url_for('view_student'))
+        
 
 
 if __name__ == "__main__":
