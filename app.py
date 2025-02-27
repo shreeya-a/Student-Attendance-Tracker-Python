@@ -10,7 +10,9 @@ load_dotenv()
 app = Flask(__name__)
 
 # Use environment variables for config
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
+# app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///attendance_system.db'
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
@@ -30,6 +32,7 @@ def home():
     if current_user.is_authenticated:
         return redirect(url_for("dashboard"))  
     return redirect(url_for("login"))  
+    return redirect(url_for("dashboard"))  
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -69,13 +72,13 @@ def dashboard():
 @login_required
 def add_student():
     if request.method == "POST":
-        name = request.form["name"]
-        student_id = request.form["student_id"]
+        first_name = request.form["first_name"]
+        last_name = request.form["last_name"]
         email = request.form["email"]
         address = request.form["address"]
         phone = request.form["phone"]
 
-        new_student = Student(student_id=student_id, name=name, email=email, address=address, phone=phone)
+        new_student = Student(first_name= first_name, last_name = last_name, email=email, address=address, phone=phone)
         db.session.add(new_student)
         db.session.commit()
         
@@ -83,6 +86,14 @@ def add_student():
         return redirect(url_for("dashboard"))
     
     return render_template("student/add_student.html")
+
+# display student list in table
+
+@app.route('/student-list')
+@login_required
+def student_list():
+    students = Student.query.all()
+    return render_template("student/student_list.html", students = students)
 
 
 
