@@ -83,7 +83,7 @@ def add_student():
         db.session.commit()
         
         flash("Student added successfully!", "success")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("student/student_list.html"))
     
     return render_template("student/add_student.html")
 
@@ -92,7 +92,8 @@ def add_student():
 @app.route('/student-list')
 @login_required
 def student_list():
-    students = Student.query.all()
+    # students = Student.query.all()
+    students = Student.query.order_by(Student.first_name.asc()).all()
     return render_template("student/student_list.html", students = students)
 
 
