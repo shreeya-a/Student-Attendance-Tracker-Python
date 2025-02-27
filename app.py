@@ -20,8 +20,7 @@ bcrypt.init_app(app)
 
 # Initialize Flask-Login
 login_manager = LoginManager(app)
-login_manager.login_view = "login"
-
+login_manager.login_view = "login"  
 @login_manager.user_loader
 def load_admin(admin_id):
     return User.query.get(int(admin_id))
@@ -29,14 +28,14 @@ def load_admin(admin_id):
 @app.route("/")
 def home():
     if current_user.is_authenticated:
-        return render_template(url_for("dashboard"))
-    return redirect(url_for("login"))
+        return redirect(url_for("dashboard"))  
+    return redirect(url_for("login"))  
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for("dashboard"))
-    
+        return redirect(url_for("dashboard"))  
+
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -44,7 +43,7 @@ def login():
 
         if user and bcrypt.check_password_hash(user.password, password):
             login_user(user)
-            flash("Login successful!", "success")  # Flash success message
+            flash("Login successful!", "success")
             return redirect(url_for("dashboard"))
         else:
             flash("Invalid credentials or not an admin!", "danger")
@@ -65,8 +64,32 @@ def dashboard():
     students = Student.query.all()
     return render_template("dashboard.html", students=students)
 
+
+@app.route('/add_student', methods=["GET", "POST"])
+@login_required
+def add_student():
+    if request.method == "POST":
+        name = request.form["name"]
+        student_id = request.form["student_id"]
+        email = request.form["email"]
+        address = request.form["address"]
+        phone = request.form["phone"]
+
+        new_student = Student(student_id=student_id, name=name, email=email, address=address, phone=phone)
+        db.session.add(new_student)
+        db.session.commit()
+        
+        flash("Student added successfully!", "success")
+        return redirect(url_for("dashboard"))
+    
+    return render_template("CRUD/add_student.html")
+
+
+
+
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-        create_admin()  # Automatically create admin if not exists
+        create_admin()  
     app.run(debug=True)
