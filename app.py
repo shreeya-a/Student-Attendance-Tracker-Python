@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from dotenv import load_dotenv  # Load environment variables
 from models import db, User, Student, Attendance, bcrypt, create_admin
+from datetime import datetime
 
 # Load environment variables from .env file
 load_dotenv()
@@ -156,6 +157,31 @@ def delete(id):
         
 
 
+# #Attendance
+
+@app.route('/mark-attendance', request = ["GET", "POST"])
+def mark_attendance():
+    students = Student.query.all()
+    
+    if request.method == 'POST':
+        selected_date = request.form.get("date", datetime.utcnow().date())
+        
+        for student in students:
+            status = request.form.get("status_{student.id}")
+            
+            if status:
+                existing_attendance = Attendance.query.filter_by(student_id = student.id, date=selected_date).first()
+
+                if existing_attendance:
+                    existing_attendance.status = status
+                else:
+                    new_attendance = Attendance(student_id=student.id, date=selected_date, status=status)
+                    db.session.add(new_attendance)
+                    
+        db.session.commit()
+        return redirect(url_for('mark_attendance'))
+    
+    return render_template('mark_attendance.html', students = students)
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()

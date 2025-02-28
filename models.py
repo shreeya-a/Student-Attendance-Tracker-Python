@@ -49,8 +49,8 @@ class Attendance(db.Model):
     
     id = db.Column(db.Integer, primary_key = True)
     student_id = db.Column(db.Integer(), db.ForeignKey("student.id"), nullable = False)
-    date = db.Column(db.Date, nullable = False)
-    status = db.Column(db.String(10), nullable = False, default = datetime.utcnow().date)
+    date = db.Column(db.Date, nullable = False, default = datetime.utcnow().date)
+    status = db.Column(db.String(10), nullable = False)
     
 # Function to create admin if not exists
 def create_admin():
