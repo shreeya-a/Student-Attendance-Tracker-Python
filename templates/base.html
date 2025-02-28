@@ -45,17 +45,18 @@
             align-items: center;
             color: var(--sidebar-text);
             text-decoration: none;
-            font-size: 18px;
+            font-size: 16px;
             padding: 12px;
             border-radius: 8px;
             transition: background 0.3s ease;
+            width: 100%;
         }
 
         .sidebar a i {
             margin-right: 10px;
         }
 
-        .sidebar a:hover {
+        .sidebar a:hover, .sidebar .active {
             background-color: var(--primary-hover);
         }
 
@@ -81,6 +82,9 @@
         .breadcrumb {
             margin-bottom: 0;
         }
+
+
+        
     </style>
     {% block styles %}{% endblock %}
 </head>
@@ -90,11 +94,25 @@
     <div class="sidebar">
         <div class="brand">Dashboard</div>
 
-        <a href="{{ url_for('dashboard') }}"><i class="fa fa-home"></i> Home</a>
-        <a href="{{ url_for('view_student') }}"><i class="fa fa-users"></i> Students</a>
+        <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <i class="fa fa-home"></i> Home
+        </a>
 
+        <a href="{{ url_for('view_student') }}" class="{% if request.endpoint == 'view_student' %}active{% endif %}">
+            <i class="fa fa-users"></i> Manage Students
+        </a>
 
-        <a href="{{ url_for('logout') }}" class="logout"><i class="fa fa-sign-out-alt"></i> Logout</a>
+        <a href="{{ url_for('attendance_records') }}" class="{% if request.endpoint == 'attendance_records' %}active{% endif %}">
+            <i class="fa fa-eye"></i> Attendance Records
+        </a>
+
+        <a href="{{ url_for('mark_attendance') }}" class="{% if request.endpoint == 'mark_attendance' %}active{% endif %}">
+            <i class="fa fa-edit"></i> Mark Attendance
+        </a>
+
+        <a href="{{ url_for('logout') }}" class="logout">
+            <i class="fa fa-sign-out-alt"></i> Logout
+        </a>
     </div>
 
     <!-- Main Content -->
@@ -110,6 +128,10 @@
                             <li class="breadcrumb-item active" aria-current="page">Student List</li>
                         {% elif request.endpoint == 'add_student' %}
                             <li class="breadcrumb-item active" aria-current="page">Add Student</li>
+                        {% elif request.endpoint == 'attendance_records' %}
+                            <li class="breadcrumb-item active" aria-current="page">View Attendance</li>
+                        {% elif request.endpoint == 'mark_attendance' %}
+                            <li class="breadcrumb-item active" aria-current="page">Mark Attendance</li>
                         {% endif %}
                     </ol>
                 </nav>
@@ -132,7 +154,6 @@
         <!-- Dynamic Content -->
         {% block content %}{% endblock %}
     </div>
-
     <!-- JavaScript -->
     <script src="{{ url_for('static', filename='js/flash_messages.js') }}"></script>
 </body>
