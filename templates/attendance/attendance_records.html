@@ -63,11 +63,10 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h3 class="text-center text-primary">Attendance Records</h3>
 
     <!-- Date Selection Form -->
     <div class="card p-4 bg-white shadow mb-3">
-        <form method="GET" action="{{ url_for('attendance_records') }}" class="mb-3">
+        <form method="GET" action="{{ url_for('attendance_records') }}" class="">
             <label for="date" class="form-label fw-semibold">Select Date:</label>
             <input type="date" id="date" name="date" class="form-control d-inline-block w-auto" 
                    value="{{ selected_date }}">
@@ -80,7 +79,7 @@
         <table class="table table-bordered table-hover">
             <thead>
                 <tr>
-                    <th>SN</th>
+                    <th>ID</th>
                     <th>Student Name</th>
                     <th>Status</th>
                 </tr>
@@ -90,8 +89,8 @@
                     {% if records %}
                         {% for record in records %}
                             <tr>
+                                <td>{{ student.student_id }}</td>
                                 <td>{{ student.first_name }} {{ student.last_name }}</td>
-                                <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
                                 <td>
                                     <span class="status-badge 
                                         {% if record.status == 'Present' %}status-present
