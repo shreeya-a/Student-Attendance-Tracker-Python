@@ -1,11 +1,71 @@
 {% extends "base.html" %}
 
-{% block title%}Attendance{% endblock %}
+{% block title %}Mark Attendance{% endblock %}
 
-{% block styles%} {% endblock %}
+{% block styles %}
+<style>
+    .readonly-status {
+        font-weight: bold;
+        color: green;
+    }
+</style>
+{% endblock %}
 
-{% block nav_title%}Take Attendance {% endblock%}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center text-primary">Mark Attendance</h2>
+    
+    <form method="POST">
+        <div class="mb-3">
+            <label for="date" class="form-label fw-semibold">Select Date:</label>
+            <input type="date" id="date" name="date" class="form-control" required
+                value="{{ today_date }}" max="{{ today_date }}">
+        </div>
 
-{% block content%}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>SN</th>
+                    <th>Student Name</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ student.first_name }} {{ student.last_name }}</td>
+                    <td>
+                        {% if student.id in attendance_records %}
+                            <span class="readonly-status">{{ attendance_records[student.id] }}</span>
+                        {% else %}
+                            <select name="status_{{ student.id }}" class="form-select" required>
+                                <option value="Present">Present</option>
+                                <option value="Absent">Absent</option>
+                                <option value="Late">Late</option>
+                            </select>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="text-center mt-3">
+            <button type="submit" class="btn btn-primary px-4">Submit</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Ensure the date input shows today's date by default
+    document.addEventListener("DOMContentLoaded", function() {
+        let dateInput = document.getElementById("date");
+        if (!dateInput.value) {
+            let today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
+    });
+</script>
 
 {% endblock %}

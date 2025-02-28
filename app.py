@@ -159,29 +159,78 @@ def delete(id):
 
 # #Attendance
 
-@app.route('/mark-attendance', request = ["GET", "POST"])
+from flask import render_template, request, redirect, url_for, flash
+from datetime import datetime
+from models import db, Attendance, Student  # Import models
+
+@app.route('/mark-attendance', methods=["GET", "POST"])
 def mark_attendance():
     students = Student.query.all()
-    
-    if request.method == 'POST':
-        selected_date = request.form.get("date", datetime.utcnow().date())
-        
-        for student in students:
-            status = request.form.get("status_{student.id}")
-            
-            if status:
-                existing_attendance = Attendance.query.filter_by(student_id = student.id, date=selected_date).first()
+    today_date = datetime.today().date()  # Get today's date
 
+    if request.method == "POST":
+        selected_date = request.form.get("date")  
+        if not selected_date:
+            flash("Please select a valid date.", "danger")
+            return redirect(url_for("mark_attendance"))
+
+        selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+
+        if selected_date > today_date:
+            flash("You cannot mark attendance for a future date.", "danger")
+            return redirect(url_for("mark_attendance"))
+
+        for student in students:
+            status = request.form.get(f"status_{student.id}")
+
+            if status:
+                existing_attendance = Attendance.query.filter_by(student_id=student.id, date=selected_date).first()
                 if existing_attendance:
-                    existing_attendance.status = status
+                    existing_attendance.status = status  # Update if already exists
                 else:
                     new_attendance = Attendance(student_id=student.id, date=selected_date, status=status)
                     db.session.add(new_attendance)
-                    
+        
         db.session.commit()
-        return redirect(url_for('mark_attendance'))
+        flash("Attendance marked successfully!", "success")
+        return redirect(url_for("mark_attendance"))
+
+    # Fetch existing attendance records for today
+    attendance_records = {att.student_id: att.status for att in Attendance.query.filter_by(date=today_date).all()}
     
-    return render_template('mark_attendance.html', students = students)
+    return render_template("attendance/mark_attendance.html", students=students, today_date=today_date, attendance_records=attendance_records)
+
+# view attendance records
+from flask import request, render_template
+from datetime import datetime
+
+@app.route('/attendance-records', methods=['GET', 'POST'])
+def attendance_records():
+    students = Student.query.all()
+    attendance_data = {}
+    
+    # Handle both GET and POST requests
+    selected_date = request.form.get('date') if request.method == 'POST' else request.args.get('date')
+    today_date = datetime.today().strftime('%Y-%m-%d')
+
+    # Default to today's date if no date is selected
+    date_to_query = selected_date if selected_date else today_date
+    records = Attendance.query.filter_by(date=date_to_query).all()
+
+    # Store attendance records per student
+    for student in students:
+        attendance_data[student] = [record for record in records if record.student_id == student.id]
+
+    return render_template('attendance/attendance_records.html', 
+                           students=students, 
+                           attendance_data=attendance_data, 
+                           selected_date=selected_date or today_date,
+                           today_date=today_date)
+
+
+
+
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
