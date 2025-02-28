@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Records{% endblock %}
+
+{% block styles %}
+<style>
+    :root {
+        --primary-color: #6f42c1;
+        --primary-hover: #5a32a3;
+    }
+    
+    .card {
+        border: none;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        background-color: #f8f9fa;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .table th {
+        background-color: var(--primary-color);
+        color: white;
+        text-align: center;
+    }
+
+    .table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+
+    .status-present {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .status-late {
+        background-color: #ffc107;
+        color: black;
+    }
+
+    .status-absent {
+        background-color: #dc3545;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block nav_title %}Attendance Records{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- Date Selection Form -->
+    <div class="card p-4 bg-white shadow mb-3">
+        <form method="GET" action="{{ url_for('attendance_records') }}" class="">
+            <label for="date" class="form-label fw-semibold">Select Date:</label>
+            <input type="date" id="date" name="date" class="form-control d-inline-block w-auto" 
+                   value="{{ selected_date }}">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+        
+    </div>
+
+    <div class="card p-4 bg-white shadow">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Student Name</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student, records in attendance_data.items() %}
+                    {% if records %}
+                        {% for record in records %}
+                            <tr>
+                                <td>{{ student.student_id }}</td>
+                                <td>{{ student.first_name }} {{ student.last_name }}</td>
+                                <td>
+                                    <span class="status-badge 
+                                        {% if record.status == 'Present' %}status-present
+                                        {% elif record.status == 'Late' %}status-late
+                                        {% else %}status-absent{% endif %}">
+                                        {{ record.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% if records == None %}
+                    <tr><td colspan="3" class="text-center text-danger">No record found</td></tr>
+                {% endif %}
+            </tbody>
+            
+        </table>
+    </div>
+</div>
+{% endblock %}

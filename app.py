@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from dotenv import load_dotenv  # Load environment variables
 from models import db, User, Student, Attendance, bcrypt, create_admin
+from datetime import datetime
 
 # Load environment variables from .env file
 load_dotenv()
@@ -106,7 +107,7 @@ def view_student():
             db.session.commit()
             
             flash("Student added successfully!", "success")
-            return redirect(url_for("view_student")) 
+            # return redirect(url_for("view_student")) 
         except Exception as e:
             flash("Error: Email or Phone number already exists!", "danger")
             # return redirect("view_student") 
@@ -154,6 +155,87 @@ def delete(id):
         flash(f"Error: There was an issue while deleting the student details!", "danger")
         return redirect(url_for('view_student'))
         
+
+
+# #Attendance
+
+
+@app.route('/mark-attendance', methods=["GET", "POST"])
+def mark_attendance():
+    students = Student.query.all()
+    today_date = datetime.today().date()
+
+    # Get selected date from GET request (if present), otherwise default to today
+    selected_date_str = request.args.get("date", today_date.strftime("%Y-%m-%d"))
+    selected_date = datetime.strptime(selected_date_str, "%Y-%m-%d").date()
+
+    # Fetch attendance records for the selected date
+    attendance_records = {att.student_id: att.status for att in Attendance.query.filter_by(date=selected_date).all()}
+
+    if request.method == "POST":
+        form_date_str = request.form.get("date")
+        if not form_date_str:
+            flash("Please select a valid date.", "danger")
+            return redirect(url_for("mark_attendance", date=selected_date_str))
+
+        form_date = datetime.strptime(form_date_str, "%Y-%m-%d").date()
+        if form_date > today_date:
+            flash("You cannot mark attendance for a future date.", "danger")
+            return redirect(url_for("mark_attendance", date=selected_date_str))
+
+        for student in students:
+            status = request.form.get(f"status_{student.id}")
+            if status:
+                existing_attendance = Attendance.query.filter_by(student_id=student.id, date=form_date).first()
+                if existing_attendance:
+                    existing_attendance.status = status
+                else:
+                    new_attendance = Attendance(student_id=student.id, date=form_date, status=status)
+                    db.session.add(new_attendance)
+
+        db.session.commit()
+        flash("Attendance marked successfully!", "success")
+        return redirect(url_for("mark_attendance", date=form_date.strftime("%Y-%m-%d")))
+
+    return render_template(
+        "attendance/mark_attendance.html",
+        students=students,
+        today_date=today_date,
+        selected_date=selected_date.strftime("%Y-%m-%d"),
+        attendance_records=attendance_records
+    )
+
+
+
+
+# view attendance records
+
+
+@app.route('/attendance-records', methods=['GET', 'POST'])
+def attendance_records():
+    students = Student.query.all()
+    attendance_data = {}
+    
+    # Handle both GET and POST requests
+    selected_date = request.form.get('date') if request.method == 'POST' else request.args.get('date')
+    today_date = datetime.today().strftime('%Y-%m-%d')
+
+    # Default to today's date if no date is selected
+    date_to_query = selected_date if selected_date else today_date
+    records = Attendance.query.filter_by(date=date_to_query).all()
+
+    # Store attendance records per student
+    for student in students:
+        attendance_data[student] = [record for record in records if record.student_id == student.id]
+
+    return render_template('attendance/attendance_records.html', 
+                           students=students, 
+                           attendance_data=attendance_data, 
+                           selected_date=selected_date or today_date,
+                           today_date=today_date)
+
+
+
 
 
 if __name__ == "__main__":

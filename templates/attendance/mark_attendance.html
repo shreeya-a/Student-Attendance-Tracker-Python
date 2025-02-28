@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Mark Attendance{% endblock %}
+
+{% block styles %}
+<style>
+    /* Status Colors */
+    .status-present {
+        background-color: #d4edda; /* Light Green */
+        color: #155724; /* Dark Green */
+    }
+
+    .status-absent {
+        background-color: #f8d7da; /* Light Red */
+        color: #721c24; /* Dark Red */
+    }
+
+    .status-late {
+        background-color: #fff3cd; /* Light Yellow */
+        color: #856404; /* Dark Yellow */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center text-primary">Mark Attendance</h2>
+    
+    <form method="POST">
+        <div class="mb-3">
+            <label for="date" class="form-label fw-semibold">Select Date:</label>
+            <input type="date" id="date" name="date" class="form-control" required
+                value="{{ selected_date }}" max="{{ today_date }}">
+
+        </div>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>SN</th>
+                    <th>Student Name</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                {% set status = attendance_records.get(student.id, '') %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ student.first_name }} {{ student.last_name }}</td>
+                    <td>
+                        <select name="status_{{ student.id }}" class="form-select 
+                            {% if status == 'Present' %}status-present
+                            {% elif status == 'Absent' %}status-absent
+                            {% elif status == 'Late' %}status-late{% endif %}" required>
+                            <option value="">Select</option>
+                            <option value="Present" {% if status == "Present" %}selected{% endif %}>Present</option>
+                            <option value="Absent" {% if status == "Absent" %}selected{% endif %}>Absent</option>
+                            <option value="Late" {% if status == "Late" %}selected{% endif %}>Late</option>
+                        </select>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="text-center mt-3">
+            <button type="submit" class="btn btn-primary px-4">Submit</button>
+        </div>
+    </form>
+</div>
+<script>
+    document.getElementById("date").addEventListener("change", function () {
+        const selectedDate = this.value;
+        window.location.href = `{{ url_for('mark_attendance') }}?date=${selectedDate}`;
+    });
+</script>
+
+{% endblock %}
