@@ -3,5 +3,6 @@ venv/
 .env
 instance/attendance_system.db
 echo "__pycache__/"
+instance/attendance_system.db
 
 
