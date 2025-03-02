@@ -12,6 +12,7 @@ import base64
 from collections import defaultdict
 import io
 import base64
+import csv
 # Load environment variables from .env file
 load_dotenv()
 
@@ -67,14 +68,6 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
-# @app.route("/dashboard")
-# @login_required
-# def dashboard():
-#     if not current_user.is_admin:
-#         return "Access Denied!", 403
-#     students = Student.query.all()
-#     return render_template("dashboard.html", students=students)
-
 
 
 from flask import render_template
@@ -119,8 +112,10 @@ def dashboard():
 
     # Calculate attendance percentage per student
     student_percentages = {}
+    student_statistics = []
     for student_id, stats in student_attendance.items():
         total = stats["Total"]
+        student = Student.query.get(student_id)
         if total > 0:
             student_percentages[student_id] = {
                 "Present": round((stats["Present"] / total) * 100, 2),
@@ -130,6 +125,15 @@ def dashboard():
         else:
             student_percentages[student_id] = {"Present": 0, "Absent": 0, "Late": 0}
 
+        # Prepare student statistics for template
+        student_statistics.append({
+            "first_name": student.first_name,
+            "last_name": student.last_name,
+            "present": stats["Present"],
+            "absent": stats["Absent"],
+            "late": stats["Late"]
+        })
+
     print("Today's Attendance Summary:", today_attendance_summary)  # Debugging
 
     return render_template(
@@ -138,29 +142,9 @@ def dashboard():
         today_attendance=today_attendance_summary,  # Pass today's attendance data
         daily_attendance=daily_attendance,
         student_percentages=student_percentages,
+        student_statistics=student_statistics,
     )
 
-
-
-
-# @app.route('/add_student', methods=["GET", "POST"])
-# @login_required
-# def add_student():
-#     if request.method == "POST":
-#         first_name = request.form["first_name"]
-#         last_name = request.form["last_name"]
-#         email = request.form["email"]
-#         address = request.form["address"]
-#         phone = request.form["phone"]
-
-#         new_student = Student(first_name= first_name, last_name = last_name, email=email, address=address, phone=phone)
-#         db.session.add(new_student)
-#         db.session.commit()
-        
-#         flash("Student added successfully!", "success")
-#         return redirect(url_for("student/view_student.html"))
-    
-#     return render_template("student/add_student.html")
 
 # display student list in table
 
@@ -310,8 +294,6 @@ def attendance_records():
 
 
 # Attendance chart 
-
-
 # Attendance chart for pie chart
 
 @app.route('/attendance-chart')
@@ -338,76 +320,6 @@ def attendance_chart():
     plt.savefig(img, format='png')
     img.seek(0)
     plt.close(fig)
-    return send_file(img, mimetype='image/png')
-
-
-# Attendance chart for daily records
-
-@app.route('/daily-attendance-chart')
-def daily_attendance_chart():
-    daily_data = Attendance.query.with_entities(Attendance.date, Attendance.status).all()
-
-    # Organize data
-    dates = sorted(set(record.date for record in daily_data))
-    present_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Present") for date in dates]
-    absent_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Absent") for date in dates]
-    late_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Late") for date in dates]
-
-    # Plot Line Chart
-    fig = plt.figure(figsize=(8, 5))
-    plt.plot(dates, present_counts, label="Present", marker="o", color="green")
-    plt.plot(dates, absent_counts, label="Absent", marker="o", color="red")
-    plt.plot(dates, late_counts, label="Late", marker="o", color="yellow")
-    plt.xlabel("Date")
-    plt.ylabel("Number of Students")
-    plt.title("Daily Attendance Trends")
-    plt.legend()
-
-    # Save and send chart
-    img = io.BytesIO()
-    plt.savefig(img, format='png')
-    img.seek(0)
-    plt.close(fig)
-    
-    return send_file(img, mimetype='image/png')
-
-
-# Show student performance chart
-@app.route('/student-performance-chart')
-def student_performance_chart():
-    colors = []
-    students = Student.query.all()
-    student_attendance = {student.id: {"Present": 0, "Absent": 0, "Late": 0, "Total": 0} for student in students}
-
-    # Fetch attendance data
-    for record in Attendance.query.all():
-        student_attendance[record.student_id][record.status] += 1
-        student_attendance[record.student_id]["Total"] += 1
-
-    student_names = [f"{student.first_name} {student.last_name}" for student in students]
-    present_percents = [
-        round((student_attendance[student.id]["Present"] / student_attendance[student.id]["Total"]) * 100, 2)
-        if student_attendance[student.id]["Total"] > 0 else 0
-        for student in students
-    ]
-    colors = ["green" if percent > 90 else "orange" if percent < 60 else "lightblue" for percent in present_percents]   
-                
-    # Plot Bar Chart
-    fig = plt.figure(figsize=(8,5))
-    plt.bar(student_names, present_percents, color=colors)
-    plt.xlabel("Students")
-    plt.ylabel("Attendance %")
-    plt.title("Student Performance (Attendance %)")
-    plt.xticks(rotation=45)
-
-    plt.tight_layout()
-
-    # Save and send chart
-    img = io.BytesIO()
-    plt.savefig(img, format='png', bbox_inches="tight")
-    img.seek(0)
-    plt.close(fig)
-
     return send_file(img, mimetype='image/png')
 
 
@@ -441,6 +353,50 @@ def overall_attendance_chart():
     plt.close(fig)
     
     return send_file(img, mimetype='image/png')
+
+
+@app.route('/download_csv')
+@login_required
+def download_csv():
+    students = Student.query.all()
+    attendance_records = Attendance.query.all()
+
+    output = []
+    headers = ["Student Name"] + sorted(set(a.date.strftime('%Y-%m-%d') for a in attendance_records)) + ["Total Present", "Total Absent", "Total Late"]
+
+    # Build attendance data
+    student_data = {s.id: {"name": f"{s.first_name} {s.last_name}", "attendance": {}} for s in students}
+
+    for record in attendance_records:
+        student_data[record.student_id]["attendance"][record.date.strftime('%Y-%m-%d')] = record.status
+
+    for s_id, data in student_data.items():
+        row = [data["name"]]
+        total_present = total_absent = total_late = 0
+
+        for date in headers[1:-3]:
+            status = data["attendance"].get(date, "N/A")
+            row.append(status)
+            if status == "Present":
+                total_present += 1
+            elif status == "Absent":
+                total_absent += 1
+            elif status == "Late":
+                total_late += 1
+
+        row.extend([total_present, total_absent, total_late])
+        output.append(row)
+
+    # Generate CSV response
+    si = io.StringIO()
+    writer = csv.writer(si)
+    writer.writerow(headers)
+    writer.writerows(output)
+
+    response = Response(si.getvalue(), mimetype="text/csv")
+    response.headers["Content-Disposition"] = "attachment; filename=attendance_report.csv"
+    return response
+
 
 
 if __name__ == "__main__":
