@@ -2,8 +2,8 @@ import os
 from flask import Flask, render_template, request, flash, redirect, url_for, send_file, Response
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from dotenv import load_dotenv  # Load environment variables
-from models import db, User, Student, Attendance, bcrypt, create_admin
-from datetime import datetime
+from models import db, User, Student, Attendance, bcrypt, create_admin, EmailLog
+from datetime import datetime, timedelta
 import matplotlib
 matplotlib.use("Agg")  # Use a non-GUI backend
 import matplotlib.pyplot as plt
@@ -13,6 +13,9 @@ from collections import defaultdict
 import io
 import base64
 import csv
+from warning_email import send_warning_email
+
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -393,9 +396,42 @@ def download_csv():
     return response
 
 
+# Send warning to student with <70% attendance
+
+def check_and_send_emails():
+    with app.app_context():
+        students = Student.query.all()
+
+        for student in students:
+            total_days = Attendance.query.filter_by(student_id=student.id).count()
+            present_days = Attendance.query.filter_by(student_id=student.id, status="Present").count()
+
+            if total_days > 0:
+                attendance_percentage = (present_days / total_days) * 100
+
+                if attendance_percentage < 70:
+                    # Check if an email was sent in the last 1 days
+                    recent_email = EmailLog.query.filter(
+                        EmailLog.student_id == student.id,
+                        EmailLog.sent_at >= datetime.utcnow() - timedelta(days=1)
+                    ).first()
+
+                    if not recent_email:
+                        student_name = f"{student.first_name} {student.last_name}"
+                        send_warning_email(student.email, student_name, attendance_percentage)
+
+                        # Log the email sent
+                        email_log = EmailLog(student_id=student.id)
+                        db.session.add(email_log)
+                        db.session.commit()
+
+
+
+
 
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         create_admin()  
+    check_and_send_emails()
     app.run(debug=True, threaded = False)

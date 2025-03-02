@@ -64,3 +64,10 @@ def create_admin():
             admin = User(username=admin_username, password=hashed_password, is_admin=True)
             db.session.add(admin)
             print("✅ Admin user created successfully!")
+            
+            
+# To keeo track of when an email was sent
+class EmailLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
+    sent_at = db.Column(db.DateTime, default=datetime.utcnow)
