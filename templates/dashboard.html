@@ -1,19 +1,65 @@
 {% extends "base.html" %}
 
 {% block title %}Admin Dashboard{% endblock %}
-
-{% block nav_title%} Dashboard {% endblock%}
+{% block nav_title %}Attendance Analytics Dashboard{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center">
-        {#<h2>Admin Dashboard</h2>#}
-        {#  <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a> #}
+
+    <div class="row mt-4">
+        <!-- Total Students -->
+        <div class="col-md-3">
+            <div class="card text-center shadow p-3">
+                <h5 class="text-primary">Total Students</h5>
+                <h2>{{ total_students }}</h2>
+            </div>
+        </div>
+
+        <!-- Attendance Today -->
+        <div class="col-md-3">
+            <div class="card text-center shadow p-3">
+                <h5 class="text-success">Present Today</h5>
+                <h2>{{ today_attendance["Present"] }}</h2>
+            </div>
+        </div>
+    
+        <div class="col-md-3">
+            <div class="card text-center shadow p-3">
+                <h5 class="text-danger">Absent Today</h5>
+                <h2>{{ today_attendance["Absent"] }}</h2>
+            </div>
+        </div>
+    
+        <div class="col-md-3">
+            <div class="card text-center shadow p-3">
+                <h5 class="text-warning">Late Today</h5>
+                <h2>{{ today_attendance["Late"] }}</h2>
+            </div>
+        </div>
     </div>
 
+    <!-- Attendance Charts -->
+       <div class="mt-5 text-center">
+        <h3>Attendance Charts</h3>
+        
+        <div class="row mt-3 justify-content-center">
+            <!-- First Chart -->
+            <div class="col-md-6">
+                <img src="{{ url_for('attendance_chart') }}" class="img-fluid">
+            </div>
 
-    <h3 class="mt-4">Students</h3>
+            <!-- Second Chart -->
+            <div class="col-md-6 mt-5">
+                <img src="{{ url_for('daily_attendance_chart') }}" class="img-fluid mt-3">
+            </div>
+        </div>
+    </div>
+    
+    {# <img src="{{ url_for('student_performance_chart') }}" class="img-fluid"> #}
 
-   
+    <div class="m-8">
+        <img src="{{ url_for('student_performance_chart') }}" class="img-fluid">
+    </div>
+
 </div>
 {% endblock %}

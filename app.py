@@ -1,10 +1,17 @@
 import os
-from flask import Flask, render_template, request, flash, redirect, url_for
+from flask import Flask, render_template, request, flash, redirect, url_for, send_file, Response
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from dotenv import load_dotenv  # Load environment variables
 from models import db, User, Student, Attendance, bcrypt, create_admin
 from datetime import datetime
-
+import matplotlib
+matplotlib.use("Agg")  # Use a non-GUI backend
+import matplotlib.pyplot as plt
+import io
+import base64
+from collections import defaultdict
+import io
+import base64
 # Load environment variables from .env file
 load_dotenv()
 
@@ -60,13 +67,80 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
-@app.route("/dashboard")
+# @app.route("/dashboard")
+# @login_required
+# def dashboard():
+#     if not current_user.is_admin:
+#         return "Access Denied!", 403
+#     students = Student.query.all()
+#     return render_template("dashboard.html", students=students)
+
+
+
+from flask import render_template
+from collections import defaultdict
+from datetime import datetime
+from models import Attendance, Student  # Ensure correct model import
+
+@app.route('/dashboard')
 @login_required
 def dashboard():
-    if not current_user.is_admin:
-        return "Access Denied!", 403
-    students = Student.query.all()
-    return render_template("dashboard.html", students=students)
+    today_date = datetime.today().date()
+
+    # Get total students
+    total_students = Student.query.count()
+
+    # Fetch only today's attendance records
+    today_attendance_records = Attendance.query.filter_by(date=today_date).all()
+    
+    # Fetch all attendance records for historical data
+    attendance_records = Attendance.query.all()
+
+    # Initialize summary structures
+    daily_attendance = defaultdict(lambda: {"Present": 0, "Absent": 0, "Late": 0})
+    student_attendance = defaultdict(lambda: {"Present": 0, "Absent": 0, "Late": 0, "Total": 0})
+
+    # Process all attendance records (for historical trends)
+    for record in attendance_records:
+        date = record.date.strftime("%Y-%m-%d")
+        status = record.status
+
+        # Count attendance per day
+        daily_attendance[date][status] += 1
+
+        # Count attendance per student
+        student_attendance[record.student_id][status] += 1
+        student_attendance[record.student_id]["Total"] += 1
+
+    # Process only today's attendance records
+    today_attendance_summary = {"Present": 0, "Absent": 0, "Late": 0}
+    for record in today_attendance_records:
+        today_attendance_summary[record.status] += 1
+
+    # Calculate attendance percentage per student
+    student_percentages = {}
+    for student_id, stats in student_attendance.items():
+        total = stats["Total"]
+        if total > 0:
+            student_percentages[student_id] = {
+                "Present": round((stats["Present"] / total) * 100, 2),
+                "Absent": round((stats["Absent"] / total) * 100, 2),
+                "Late": round((stats["Late"] / total) * 100, 2),
+            }
+        else:
+            student_percentages[student_id] = {"Present": 0, "Absent": 0, "Late": 0}
+
+    print("Today's Attendance Summary:", today_attendance_summary)  # Debugging
+
+    return render_template(
+        "dashboard.html",
+        total_students=total_students,
+        today_attendance=today_attendance_summary,  # Pass today's attendance data
+        daily_attendance=daily_attendance,
+        student_percentages=student_percentages,
+    )
+
+
 
 
 # @app.route('/add_student', methods=["GET", "POST"])
@@ -235,6 +309,101 @@ def attendance_records():
                            today_date=today_date)
 
 
+# Attendance chart 
+
+
+# Attendance chart for pie chart
+
+@app.route('/attendance-chart')
+def attendance_chart():
+    # Fetch attendance data
+    attendance_records = Attendance.query.all()
+
+    # Aggregate data
+    present = sum(1 for record in attendance_records if record.status == "Present")
+    absent = sum(1 for record in attendance_records if record.status == "Absent")
+    late = sum(1 for record in attendance_records if record.status == "Late")
+
+    # Generate Pie Chart
+    labels = ["Present", "Absent", "Late"]
+    values = [present, absent, late]
+    colors = ["green", "red", "yellow"]
+
+    plt.figure(figsize=(6, 6))
+    plt.pie(values, labels=labels, autopct='%1.1f%%', colors=colors, startangle=140)
+    plt.title("Overall Attendance Distribution")
+
+    # Save chart to a BytesIO object
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    return send_file(img, mimetype='image/png')
+
+
+# Attendance chart for daily records
+
+@app.route('/daily-attendance-chart')
+def daily_attendance_chart():
+    daily_data = Attendance.query.with_entities(Attendance.date, Attendance.status).all()
+
+    # Organize data
+    dates = sorted(set(record.date for record in daily_data))
+    present_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Present") for date in dates]
+    absent_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Absent") for date in dates]
+    late_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Late") for date in dates]
+
+    # Plot Line Chart
+    plt.figure(figsize=(8, 5))
+    plt.plot(dates, present_counts, label="Present", marker="o", color="green")
+    plt.plot(dates, absent_counts, label="Absent", marker="o", color="red")
+    plt.plot(dates, late_counts, label="Late", marker="o", color="yellow")
+    plt.xlabel("Date")
+    plt.ylabel("Number of Students")
+    plt.title("Daily Attendance Trends")
+    plt.legend()
+
+    # Save and send chart
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    return send_file(img, mimetype='image/png')
+
+
+# Show student performance chart
+@app.route('/student-performance-chart')
+def student_performance_chart():
+    colors = []
+    students = Student.query.all()
+    student_attendance = {student.id: {"Present": 0, "Absent": 0, "Late": 0, "Total": 0} for student in students}
+
+    # Fetch attendance data
+    for record in Attendance.query.all():
+        student_attendance[record.student_id][record.status] += 1
+        student_attendance[record.student_id]["Total"] += 1
+
+    student_names = [f"{student.first_name} {student.last_name}" for student in students]
+    present_percents = [
+        round((student_attendance[student.id]["Present"] / student_attendance[student.id]["Total"]) * 100, 2)
+        if student_attendance[student.id]["Total"] > 0 else 0
+        for student in students
+    ]
+    colors = ["green" if percent > 90 else "orange" if percent < 60 else "lightblue" for percent in present_percents]   
+                
+    # Plot Bar Chart
+    plt.figure(figsize=(8,5))
+    plt.bar(student_names, present_percents, color=colors)
+    plt.xlabel("Students")
+    plt.ylabel("Attendance %")
+    plt.title("Student Performance (Attendance %)")
+    plt.xticks(rotation=45)
+
+    plt.tight_layout()
+
+    # Save and send chart
+    img = io.BytesIO()
+    plt.savefig(img, format='png', bbox_inches="tight")
+    img.seek(0)
+    return send_file(img, mimetype='image/png')
 
 
 

@@ -2,4 +2,6 @@ trial.py
 venv/
 .env
 instance/attendance_system.db
+echo "__pycache__/"
+
 
