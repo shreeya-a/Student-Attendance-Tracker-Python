@@ -1,5 +1,52 @@
 {% extends "base.html" %}
 
+{% block styles %}
+<style>
+    :root {
+        --primary-color: #6f42c1;
+        --primary-hover: #5a32a3;
+    }
+    
+    .card {
+        border: none;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        background-color: #f8f9fa;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .table th {
+        background-color: var(--primary-color);
+        color: white;
+        text-align: center;
+    }
+
+    .table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .icon-btn {
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: var(--primary-color);
+    }
+
+    .icon-btn:hover {
+        color: var(--primary-hover);
+    }
+</style>
+{% endblock %}
+
 {% block title %}Admin Dashboard{% endblock %}
 {% block nav_title %}Attendance Analytics Dashboard{% endblock %}
 
@@ -67,40 +114,52 @@
                 </div>
             </div>
         </div>
-
     </div>
 
+    <!-- Student Attendance Statistics -->
     <div class="mt-5">
-        <h3 class="fw-bold text-dark">📋 Student Attendance Statistics</h3>
+        <div class="mt-5 mb-2 d-flex justify-content-between align-items-center">
+            <h3 class="fw-bold text-dark">📋 Student Attendance Statistics</h3>
+            <a href="{{ url_for('download_csv') }}" class="btn btn-primary">
+                <i class="bi bi-download"></i> Download CSV Report
+            </a>
+        </div>
     
         <div class="table-responsive">
-            <table class="table table-bordered table-hover mt-3">
-                <thead class="table-dark">
+            <table class="table table-hover table-bordered " style="overflow: hidden;">
+                <thead class="text-white" style="background-color: var(--primary-color);">
                     <tr>
-                        <th>Student Name</th>
-                        <th>Total Present</th>
-                        <th>Total Absent</th>
-                        <th>Total Late</th>
+                        <th class="py-2">SN</th>
+                        <th class="py-2">Student ID</th>
+                        <th class="py-2">Student Name</th>
+                        <th class="py-2">Total Present</th>
+                        <th class="py-2">Total Absent</th>
+                        <th class="py-2">Total Late</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="bg-white">
                     {% for student in student_statistics %}
-                    <tr>
-                        <td>{{ student.first_name }} {{ student.last_name}}</td>
-                        <td class="text-success fw-bold">{{ student.present }}</td>
-                        <td class="text-danger fw-bold">{{ student.absent }}</td>
-                        <td class="text-warning fw-bold">{{ student.late }}</td>
+                    <tr class="align-middle">
+                        <td> {{ loop.index }}</td>
+                        <td> {{ student.student_id }}</td>
+                        <td class="fw-semibold">{{ student.first_name }} {{ student.last_name}}</td>
+                        <td>
+                            <span class="badge bg-success px-3 py-2">{{ student.present }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-danger px-3 py-2">{{ student.absent }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning text-dark px-3 py-2">{{ student.late }}</span>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     
-        <a href="{{ url_for('download_csv') }}" class="btn btn-primary mt-3">
-            <i class="bi bi-download"></i> Download CSV Report
-        </a>
+        
     </div>
-    
 
 </div>
 {% endblock %}

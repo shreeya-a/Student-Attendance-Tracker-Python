@@ -69,12 +69,6 @@ def logout():
     return redirect(url_for("login"))
 
 
-
-from flask import render_template
-from collections import defaultdict
-from datetime import datetime
-from models import Attendance, Student  # Ensure correct model import
-
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -127,6 +121,7 @@ def dashboard():
 
         # Prepare student statistics for template
         student_statistics.append({
+            "student_id": student.student_id,
             "first_name": student.first_name,
             "last_name": student.last_name,
             "present": stats["Present"],
@@ -328,13 +323,13 @@ def overall_attendance_chart():
     daily_data = Attendance.query.with_entities(Attendance.date, Attendance.status).all()
 
     # Organize data
-    dates = sorted(set(record.date for record in daily_data))
+    dates = sorted(set(record.date for record in daily_data))[-10:]
     present_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Present") for date in dates]
     absent_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Absent") for date in dates]
     late_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Late") for date in dates]
 
     # Plot Stacked Bar Chart
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 6.5))
     ax.bar(dates, present_counts, label="Present", color="green")
     ax.bar(dates, absent_counts, label="Absent", color="red", bottom=present_counts)
     ax.bar(dates, late_counts, label="Late", color="orange", bottom=[p + a for p, a in zip(present_counts, absent_counts)])
