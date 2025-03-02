@@ -327,7 +327,8 @@ def attendance_chart():
     # Generate Pie Chart
     labels = ["Present", "Absent", "Late"]
     values = [present, absent, late]
-    colors = ["green", "red", "yellow"]
+    colors = ["#32CD32", "#B22222", "#4169E1"]
+    
 
     plt.figure(figsize=(6, 6))
     plt.pie(values, labels=labels, autopct='%1.1f%%', colors=colors, startangle=140)
@@ -387,7 +388,7 @@ def student_performance_chart():
         if student_attendance[student.id]["Total"] > 0 else 0
         for student in students
     ]
-    colors = ["green" if percent > 90 else "orange" if percent < 60 else "lightblue" for percent in present_percents]   
+    colors = ["green" if percent > 90 else "orange" if percent < 60 else "blue" for percent in present_percents]   
                 
     # Plot Bar Chart
     plt.figure(figsize=(8,5))
@@ -403,6 +404,7 @@ def student_performance_chart():
     img = io.BytesIO()
     plt.savefig(img, format='png', bbox_inches="tight")
     img.seek(0)
+    # plt.close(fig)
     return send_file(img, mimetype='image/png')
 
 
@@ -411,4 +413,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         create_admin()  
-    app.run(debug=True)
+    app.run(debug=True, threaded=False)
