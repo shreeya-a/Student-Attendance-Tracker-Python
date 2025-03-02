@@ -1,64 +1,164 @@
 {% extends "base.html" %}
 
+{% block styles %}
+<style>
+    :root {
+        --primary-color: #6f42c1;
+        --primary-hover: #5a32a3;
+    }
+    
+    .card {
+        border: none;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        background-color: #f8f9fa;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .table th {
+        background-color: var(--primary-color);
+        color: white;
+        text-align: center;
+    }
+
+    .table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .icon-btn {
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: var(--primary-color);
+    }
+
+    .icon-btn:hover {
+        color: var(--primary-hover);
+    }
+</style>
+{% endblock %}
+
 {% block title %}Admin Dashboard{% endblock %}
 {% block nav_title %}Attendance Analytics Dashboard{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-
-    <div class="row mt-4">
-        <!-- Total Students -->
-        <div class="col-md-3">
-            <div class="card text-center shadow p-3">
-                <h5 class="text-primary">Total Students</h5>
-                <h2>{{ total_students }}</h2>
-            </div>
-        </div>
-
-        <!-- Attendance Today -->
-        <div class="col-md-3">
-            <div class="card text-center shadow p-3">
-                <h5 class="text-success">Present Today</h5>
-                <h2>{{ today_attendance["Present"] }}</h2>
-            </div>
-        </div>
+<div class="container mt-4">
     
+    <!-- Dashboard Summary Cards -->
+    <div class="row g-4">
         <div class="col-md-3">
-            <div class="card text-center shadow p-3">
-                <h5 class="text-danger">Absent Today</h5>
-                <h2>{{ today_attendance["Absent"] }}</h2>
+            <div class="card shadow border-0 text-center p-4">
+                <div class="card-body">
+                    <h5 class="text-primary fw-bold"><i class="bi bi-people-fill me-2"></i> Total Students</h5>
+                    <h2 class="fw-bold">{{ total_students }}</h2>
+                </div>
             </div>
         </div>
-    
+
         <div class="col-md-3">
-            <div class="card text-center shadow p-3">
-                <h5 class="text-warning">Late Today</h5>
-                <h2>{{ today_attendance["Late"] }}</h2>
+            <div class="card shadow border-0 text-center p-4">
+                <div class="card-body">
+                    <h5 class="text-success fw-bold"><i class="bi bi-check-circle-fill me-2"></i> Present Today</h5>
+                    <h2 class="fw-bold">{{ today_attendance["Present"] }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow border-0 text-center p-4">
+                <div class="card-body">
+                    <h5 class="text-danger fw-bold"><i class="bi bi-x-circle-fill me-2"></i> Absent Today</h5>
+                    <h2 class="fw-bold">{{ today_attendance["Absent"] }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow border-0 text-center p-4">
+                <div class="card-body">
+                    <h5 class="text-warning fw-bold"><i class="bi bi-clock-fill me-2"></i> Late Today</h5>
+                    <h2 class="fw-bold">{{ today_attendance["Late"] }}</h2>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Attendance Charts -->
-       <div class="mt-5 text-center">
-        <h3>Attendance Charts</h3>
-        
-        <div class="row mt-3 justify-content-center">
+    <!-- Attendance Charts Section -->
+    <div class="mt-5 text-center">
+        <h3 class="fw-bold text-dark">📊 Attendance Analytics</h3>
+
+        <div class="row mt-4 justify-content-center">
             <!-- First Chart -->
-            <div class="col-md-6">
-                <img src="{{ url_for('attendance_chart') }}" class="img-fluid">
+            <div class="col-lg-6">
+                <div class="card shadow p-3">
+                    <h5 class="fw-bold text-muted">Overall Daily Attendance</h5>
+                    <img src="{{ url_for('attendance_chart') }}" class="img-fluid rounded">
+                </div>
             </div>
 
             <!-- Second Chart -->
-            <div class="col-md-6 mt-5">
-                <img src="{{ url_for('daily_attendance_chart') }}" class="img-fluid mt-3">
+            <div class="col-lg-6 mt-4 mt-lg-0">
+                <div class="card shadow p-3">
+                    <h5 class="fw-bold text-muted">Overall Attendance Statistics</h5>
+                    <img src="{{ url_for('overall_attendance_chart') }}" class="img-fluid rounded">
+
+                </div>
             </div>
         </div>
     </div>
-    
-    {# <img src="{{ url_for('student_performance_chart') }}" class="img-fluid"> #}
 
-    <div class="m-8">
-        <img src="{{ url_for('student_performance_chart') }}" class="img-fluid">
+    <!-- Student Attendance Statistics -->
+    <div class="mt-5">
+        <div class="mt-5 mb-2 d-flex justify-content-between align-items-center">
+            <h3 class="fw-bold text-dark">📋 Student Attendance Statistics</h3>
+            <a href="{{ url_for('download_csv') }}" class="btn btn-primary">
+                <i class="bi bi-download"></i> Download CSV Report
+            </a>
+        </div>
+    
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered " style="overflow: hidden;">
+                <thead class="text-white" style="background-color: var(--primary-color);">
+                    <tr>
+                        <th class="py-2">SN</th>
+                        <th class="py-2">Student ID</th>
+                        <th class="py-2">Student Name</th>
+                        <th class="py-2">Total Present</th>
+                        <th class="py-2">Total Absent</th>
+                        <th class="py-2">Total Late</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white">
+                    {% for student in student_statistics %}
+                    <tr class="align-middle">
+                        <td> {{ loop.index }}</td>
+                        <td> {{ student.student_id }}</td>
+                        <td class="fw-semibold">{{ student.first_name }} {{ student.last_name}}</td>
+                        <td>
+                            <span class="badge bg-success px-3 py-2">{{ student.present }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-danger px-3 py-2">{{ student.absent }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning text-dark px-3 py-2">{{ student.late }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    
+        
     </div>
 
 </div>
