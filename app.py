@@ -329,7 +329,7 @@ def attendance_chart():
     values = [present, absent, late]
     colors = ["green", "red", "yellow"]
 
-    plt.figure(figsize=(6, 6))
+    fig = plt.figure(figsize=(6, 4))
     plt.pie(values, labels=labels, autopct='%1.1f%%', colors=colors, startangle=140)
     plt.title("Overall Attendance Distribution")
 
@@ -337,6 +337,7 @@ def attendance_chart():
     img = io.BytesIO()
     plt.savefig(img, format='png')
     img.seek(0)
+    plt.close(fig)
     return send_file(img, mimetype='image/png')
 
 
@@ -353,7 +354,7 @@ def daily_attendance_chart():
     late_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Late") for date in dates]
 
     # Plot Line Chart
-    plt.figure(figsize=(8, 5))
+    fig = plt.figure(figsize=(8, 5))
     plt.plot(dates, present_counts, label="Present", marker="o", color="green")
     plt.plot(dates, absent_counts, label="Absent", marker="o", color="red")
     plt.plot(dates, late_counts, label="Late", marker="o", color="yellow")
@@ -366,6 +367,8 @@ def daily_attendance_chart():
     img = io.BytesIO()
     plt.savefig(img, format='png')
     img.seek(0)
+    plt.close(fig)
+    
     return send_file(img, mimetype='image/png')
 
 
@@ -390,7 +393,7 @@ def student_performance_chart():
     colors = ["green" if percent > 90 else "orange" if percent < 60 else "lightblue" for percent in present_percents]   
                 
     # Plot Bar Chart
-    plt.figure(figsize=(8,5))
+    fig = plt.figure(figsize=(8,5))
     plt.bar(student_names, present_percents, color=colors)
     plt.xlabel("Students")
     plt.ylabel("Attendance %")
@@ -403,12 +406,45 @@ def student_performance_chart():
     img = io.BytesIO()
     plt.savefig(img, format='png', bbox_inches="tight")
     img.seek(0)
+    plt.close(fig)
+
     return send_file(img, mimetype='image/png')
 
+
+@app.route('/overall-attendance-chart')
+def overall_attendance_chart():
+    daily_data = Attendance.query.with_entities(Attendance.date, Attendance.status).all()
+
+    # Organize data
+    dates = sorted(set(record.date for record in daily_data))
+    present_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Present") for date in dates]
+    absent_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Absent") for date in dates]
+    late_counts = [sum(1 for record in daily_data if record.date == date and record.status == "Late") for date in dates]
+
+    # Plot Stacked Bar Chart
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.bar(dates, present_counts, label="Present", color="green")
+    ax.bar(dates, absent_counts, label="Absent", color="red", bottom=present_counts)
+    ax.bar(dates, late_counts, label="Late", color="orange", bottom=[p + a for p, a in zip(present_counts, absent_counts)])
+    
+    plt.xlabel("Date")
+    plt.ylabel("Number of Students")
+    plt.title("Overall Class Attendance Statistics")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    # Save and send chart
+    img = io.BytesIO()
+    plt.savefig(img, format='png', bbox_inches="tight")
+    img.seek(0)
+    plt.close(fig)
+    
+    return send_file(img, mimetype='image/png')
 
 
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         create_admin()  
-    app.run(debug=True)
+    app.run(debug=True, threaded = False)
