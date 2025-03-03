@@ -1,9 +1,14 @@
 {% extends "base.html" %}
 
 {% block title %}Mark Attendance{% endblock %}
+{% block nav_title %}Mark Attendance{% endblock %}
 
 {% block styles %}
 <style>
+    .text-primary {
+        color: var(--primary-color) !important;
+    }
+    
     /* Status Colors */
     .status-present {
         background-color: #d4edda; /* Light Green */
@@ -19,12 +24,55 @@
         background-color: #fff3cd; /* Light Yellow */
         color: #856404; /* Dark Yellow */
     }
+    
+        :root {
+            --primary-color: #6f42c1;
+            --primary-hover: #5a32a3;
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            background-color: #f8f9fa;
+        }
+    
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+    
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+    
+        .table th {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+        }
+    
+        .table td {
+            vertical-align: middle;
+            text-align: center;
+        }
+    
+        .icon-btn {
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--primary-color);
+        }
+    
+        .icon-btn:hover {
+            color: var(--primary-hover);
+        }
+    
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="text-center text-primary">Mark Attendance</h2>
     
     <form method="POST">
         <div class="mb-3">
@@ -75,5 +123,7 @@
         window.location.href = `{{ url_for('mark_attendance') }}?date=${selectedDate}`;
     });
 </script>
+<script src="{{ url_for('static', filename='js/flash_messages.js') }}"></script>
+
 
 {% endblock %}
