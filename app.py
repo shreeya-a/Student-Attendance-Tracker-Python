@@ -150,10 +150,10 @@ def dashboard():
 @login_required
 def view_student():
     if request.method == "POST":
-        first_name = request.form["first_name"].strip().capitalize()
-        last_name = request.form["last_name"].strip().capitalize()
+        first_name = request.form["first_name"]
+        last_name = request.form["last_name"]
         email = request.form["email"]
-        address = request.form["address"].strip().capitalize()
+        address = request.form["address"]
         phone = request.form["phone"]
 
         new_student = Student(first_name=first_name, last_name=last_name, email=email, address=address, phone=phone)
@@ -181,11 +181,11 @@ def update(id):
     student = Student.query.get_or_404(id)
     
     if request.method == 'POST':
-        student.first_name = request.form['first_name'].strip().capitalize()
-        student.last_name = request.form['last_name'].strip().capitalize()
+        student.first_name = request.form['first_name']
+        student.last_name = request.form['last_name']
         student.email = request.form['email']
         student.phone = request.form['phone']
-        student.address = request.form['address'].strip().capitalize()
+        student.address = request.form['address']
         
         try:
             db.session.commit()
