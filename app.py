@@ -433,5 +433,5 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         create_admin()  
-    check_and_send_emails()
+    # check_and_send_emails()
     app.run(debug=True, threaded = False)
