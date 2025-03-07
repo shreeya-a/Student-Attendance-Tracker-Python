@@ -19,6 +19,15 @@
         border: none;
     }
 
+    .btn-email {
+        background-color: rgb(255, 193, 7);
+        border: none;
+    }
+    .btn-email:hover {
+        background-color:rgb(222, 182, 61) ;
+        border: none;
+    }
+
     .btn-primary:hover {
         background-color: var(--primary-hover);
     }
@@ -121,10 +130,16 @@
     <div class="mt-5">
         <div class="mt-5 mb-2 d-flex justify-content-between align-items-center">
             <h3 class="fw-bold text-dark">📋 Student Attendance Statistics</h3>
-            <a href="{{ url_for('download_csv') }}" class="btn btn-primary">
-                <i class="bi bi-download"></i> Download CSV Report
-            </a>
+            <div>
+                <a href="{{ url_for('download_csv') }}" class="btn btn-primary me-2">
+                    <i class="bi bi-download"></i> Download CSV Report
+                </a>
+                <a href="{{ url_for('run_email_check') }}" class="btn btn-email">
+                    <i class="bi bi-envelope"></i>  Send Email Alerts
+                </a>
+            </div>
         </div>
+        
     
         <div class="table-responsive">
             <table class="table table-hover table-bordered " style="overflow: hidden;">

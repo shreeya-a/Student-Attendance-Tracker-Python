@@ -426,6 +426,12 @@ def check_and_send_emails():
                         db.session.commit()
 
 
+@app.route('/run-email-check')
+@login_required
+def run_email_check():
+    check_and_send_emails()
+    flash("Email check is running in the background!", "info")
+    return redirect(url_for("dashboard"))
 
 
 
@@ -434,4 +440,6 @@ if __name__ == "__main__":
         db.create_all()
         create_admin()  
     # check_and_send_emails()
+
     app.run(debug=True, threaded = False)
+
